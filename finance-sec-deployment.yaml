@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: finance-sec
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: finance-sec
+  template:
+    metadata:
+      labels:
+        app: finance-sec
+    spec:
+      containers:
+        - name: finance-sec
+          image: finance-sec:v1
+          imagePullPolicy: Never        # use locally-built minikube image
+          ports:
+            - containerPort: 8001
+          resources:
+            limits:
+              memory: "256Mi"
+              cpu: "200m"
+            requests:
+              memory: "128Mi"
+              cpu: "100m"

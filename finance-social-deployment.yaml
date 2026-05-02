@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: finance-social
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: finance-social
+  template:
+    metadata:
+      labels:
+        app: finance-social
+    spec:
+      containers:
+        - name: finance-social
+          image: finance-social-mcp:v1
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8003
+          env:
+            - name: TWITTER_BEARER_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: social-api-secret
+                  key: TWITTER_BEARER_TOKEN
+                  optional: true

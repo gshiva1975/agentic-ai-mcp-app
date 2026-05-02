@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: finance-sec
+spec:
+  selector:
+    app: finance-sec
+  ports:
+    - protocol: TCP
+      port: 8001
+      targetPort: 8001

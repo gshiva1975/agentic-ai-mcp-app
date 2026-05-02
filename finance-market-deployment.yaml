@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: finance-market
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: finance-market
+  template:
+    metadata:
+      labels:
+        app: finance-market
+    spec:
+      containers:
+        - name: finance-market
+          image: finance-market:v1
+          imagePullPolicy: Never        # use locally-built minikube image
+          ports:
+            - containerPort: 8003
+          resources:
+            limits:
+              memory: "256Mi"
+              cpu: "200m"
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+          env:
+            - name: ALPHA_VANTAGE_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: alpha-vantage-secret
+                  key: ALPHA_VANTAGE_API_KEY

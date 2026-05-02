@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: finance-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: finance-api
+  template:
+    metadata:
+      labels:
+        app: finance-api
+    spec:
+      containers:
+        - name: finance-api
+          image: finance-api:v2
+          imagePullPolicy: Never        # use locally-built minikube image
+          ports:
+            - containerPort: 8000
+          resources:
+            limits:
+              memory: "2Gi"
+              cpu: "500m"
+            requests:
+              memory: "512Mi"
+              cpu: "250m"
+          env:
+            - name: MCP_MARKET_URL
+              value: "http://finance-market:8003/mcp"
+            - name: MCP_SEC_URL
+              value: "http://finance-sec:8001/mcp"
+            - name: MCP_SOCIAL_URL
+              value: "http://finance-social:8003/mcp"
+            - name: EXPERIMENT_MODE
+              valueFrom:
+                configMapKeyRef:
+                  name: finance-config
+                  key: EXPERIMENT_MODE
