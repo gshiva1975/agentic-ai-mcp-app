@@ -7,6 +7,25 @@ A production-grade Retrieval-Augmented Generation (RAG) system for grounded fina
 ---<img width="140" height="150" alt="finance_service_architecture" src="https://github.com/user-attachments/assets/3c2a66e6-c784-4cab-9c39-7c9672955795" />
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ## Table of Contents
 
 - [Architecture Overview](#architecture-overview)
