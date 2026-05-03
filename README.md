@@ -21,6 +21,9 @@ A production-grade Retrieval-Augmented Generation (RAG) system for grounded fina
 
 
 
+<img width="623" height="588" alt="image" src="https://github.com/user-attachments/assets/c0fab151-dc53-4c6d-9699-5bf4130542a4" />
+
+
 
 
 
