@@ -4,7 +4,8 @@ A production-grade Retrieval-Augmented Generation (RAG) system for grounded fina
 
 > **April 1, 2026 evaluation:** 0% hallucination rate on live API, 88% of adversarial queries correctly blocked, 73.5% FinBERT sentiment accuracy on 49 labeled samples.
 
----
+---<img width="140" height="150" alt="finance_service_architecture" src="https://github.com/user-attachments/assets/3c2a66e6-c784-4cab-9c39-7c9672955795" />
+
 
 ## Table of Contents
 
