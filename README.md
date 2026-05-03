@@ -48,6 +48,9 @@ A production-grade Retrieval-Augmented Generation (RAG) system for grounded fina
 
 ## Architecture Overview
 
+<img width="648" height="586" alt="image" src="https://github.com/user-attachments/assets/7e499276-d8b5-49e2-ba2b-7b957a1d7631" />
+
+
 The system is built around three layers:
 
 ```
