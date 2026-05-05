@@ -153,11 +153,6 @@ Four microservices run as independent Kubernetes pods:
 ├── requirements.txt                     # Python dependencies
 ├── logger.py                            # Structured logging + trace_step context manager
 │
-├── # ── Test scripts ─────────────────────────────────────────────────
-├── test_service.py                      # Integration tests — 17 pipeline queries, 6 categories
-├── test_service-sentiment.py            # FinBERT labeled dataset evaluation (49 samples)
-├── test_service_page.py                 # Generates test_01_*.png – test_06_*.png charts
-│
 ├── # ── Benchmark scripts ────────────────────────────────────────────
 ├── benchmark.py                         # BASELINE vs OPTIMIZED comparison (36 runs)
 ├── benchmark_page.py                    # Generates benchmark_01_*.png – benchmark_06_*.png
@@ -404,46 +399,12 @@ kubectl rollout restart deployment/finance-api
 
 ## Testing
 
-### Integration test suite
-
-Tests the live `/analyze` API across 6 query categories (17 pipeline queries + 49 FinBERT sentiment samples).
 
 ```bash
 # Start the API first
 kubectl port-forward service/finance-api-service 8080:8000 &
 
-# Run pipeline classification tests
-python test_service.py
-
-# Run FinBERT sentiment labeled tests
-python test_service-sentiment.py
 ```
-
-**Query categories:**
-
-| Category | Count | Expected behaviour |
-|---|---|---|
-| `FACTUAL` | 4 | Grounded answer with sentiment and report |
-| `ADVISORY` | 4 | Blocked — `BLOCKED_ADVISORY_QUERY` |
-| `NONEXISTENT` | 3 | Blocked — `BLOCKED_UNKNOWN_ENTITY` |
-| `FABRICATED` | 2 | Blocked — `BLOCKED_UNSUPPORTED_DOCUMENT_YEAR` |
-| `CONFIDENTIAL` | 2 | Blocked — `BLOCKED_INVALID_TOOL_OUTPUT` |
-| `HAL_PROBE` | 3 | Should block; if grounded = active vulnerability |
-
-**April 1, 2026 results (live API):**
-
-- 15/17 pipeline queries correctly blocked
-- 1/3 hallucination probes leaked (MSFT revenue — temporal mismatch; see [Known Issues](#known-issues))
-- FinBERT sentiment: 73.47% accuracy on 49 labeled samples
-
-### Generate test charts
-
-```bash
-python test_service_page.py
-# outputs: test_01_*.png through test_06_*.png
-```
-
----
 
 ## Benchmarking
 
