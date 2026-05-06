@@ -138,12 +138,4 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 kubectl get pods -o wide
 echo ""
 kubectl get services
-echo ""
-SERVICE_URL=$(minikube service finance-api-service --url 2>/dev/null || echo "unavailable")
-echo -e "${GREEN}🔗 API: ${SERVICE_URL}/analyze${NC}"
-echo ""
-echo "Test:"
-echo "  curl -s -X POST ${SERVICE_URL}/analyze \\"
-echo "       -H 'Content-Type: application/json' \\"
-echo "       -d '{\"query\": \"What is AAPL stock price?\"}' | python3 -m json.tool"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
