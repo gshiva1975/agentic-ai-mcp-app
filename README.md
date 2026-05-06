@@ -2,8 +2,6 @@
 
 A production-grade Retrieval-Augmented Generation (RAG) system for grounded financial query answering. Deployed on Kubernetes via Minikube, the service integrates a multi-node LangGraph pipeline, three MCP data sources, FinBERT-based sentiment analysis, and a confidence-gated reflection mechanism.
 
-> **April 1, 2026 evaluation:** 0% hallucination rate on live API, 88% of adversarial queries correctly blocked, 73.5% FinBERT sentiment accuracy on 49 labeled samples.
->
 > <img width="926" height="469" alt="Screenshot 2026-05-05 at 8 33 07 AM" src="https://github.com/user-attachments/assets/36c67775-c0f8-45ac-b5a5-54d76400fe0b" />
 
 
