@@ -5,28 +5,9 @@ A production-grade Retrieval-Augmented Generation (RAG) system for grounded fina
 > <img width="926" height="469" alt="Screenshot 2026-05-05 at 8 33 07 AM" src="https://github.com/user-attachments/assets/36c67775-c0f8-45ac-b5a5-54d76400fe0b" />
 
 
+## Workflow - [Baseline and Optimized mode]
 
-
-<img width="852" height="584" alt="image" src="https://github.com/user-attachments/assets/840c2e37-1e09-4d09-9002-ff311c624c6b" />
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<img width="623" height="588" alt="image" src="https://github.com/user-attachments/assets/c0fab151-dc53-4c6d-9699-5bf4130542a4" />
-
-
-
-
+<img width="652" height="606" alt="Screenshot 2026-05-06 at 8 12 28 AM" src="https://github.com/user-attachments/assets/1e671bce-53a2-4676-9f41-d6d633f73959" />
 
 
 
@@ -46,7 +27,6 @@ A production-grade Retrieval-Augmented Generation (RAG) system for grounded fina
 - [Testing](#testing)
 - [Benchmarking](#benchmarking)
 - [Deployment](#deployment)
-- [Known Issues](#known-issues)
 
 ---
 
