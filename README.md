@@ -183,7 +183,6 @@ Optional for social sentiment:
 
 ```bash
 git clone <repo-url>
-cd finance-source-code
 export ALPHA_VANTAGE_API_KEY=your_key_here
 # optional:
 export TWITTER_BEARER_TOKEN=your_token_here
@@ -192,8 +191,20 @@ export TWITTER_BEARER_TOKEN=your_token_here
 ### 2. Deploy to Minikube (fully automated)
 
 ```bash
+python3 -m venv iisc
+
+source iisc/bin/activate
+
+
+minikube delete
+
+minikube start --memory=4096
+
+pip install -r requirements.txt
+
 chmod +x deploy.sh
 ./deploy.sh
+python fs_benchmark.py
 ```
 
 This script:
