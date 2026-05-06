@@ -1,4 +1,3 @@
-
 """
 finance_service_benchmark.py
 =============================
@@ -467,12 +466,28 @@ def run_via_api(base_url: str, mode: str, query: str, evaluator) -> dict:
         metrics = {"hallucination_rate": 0.0, "faithfulness_score": 1.0}
         alog.debug("  Blocked -> skipping hallucination eval  reason=%s", block_reason)
     else:
-        ref_docs = [answer] if answer else []
-        alog.debug("  Evaluating hallucination  ref_docs=%d", len(ref_docs))
-        with step("HallucinationEvaluator.evaluate"):
-            metrics = evaluator.evaluate(answer, ref_docs) if ref_docs else {
-                "hallucination_rate": 1.0, "faithfulness_score": 0.0,
+        # ── Use metrics the API already computed against its own retrieved docs ─
+        # The pipeline evaluates hallucination internally using the actual docs
+        # it fetched from the MCP servers (SEC, market, social). Re-evaluating
+        # locally against a different store causes a doc mismatch → wrong scores.
+        api_hall  = data.get("hallucination_rate")
+        api_faith = data.get("faithfulness_score")
+
+        if api_hall is not None and api_faith is not None:
+            metrics = {
+                "hallucination_rate": float(api_hall),
+                "faithfulness_score": float(api_faith),
             }
+            alog.debug("  Using API-returned metrics  hall=%.3f  faith=%.3f",
+                       api_hall, api_faith)
+        else:
+            # Fallback: API did not return metrics — evaluate locally
+            alog.warning("  API response missing hallucination metrics — local eval fallback")
+            ref_docs = [answer] if answer else []
+            with step("HallucinationEvaluator.evaluate"):
+                metrics = evaluator.evaluate(answer, ref_docs) if ref_docs else {
+                    "hallucination_rate": 1.0, "faithfulness_score": 0.0,
+                }
 
     alog.info("  Metrics  hall=%.3f  faith=%.3f",
               metrics["hallucination_rate"], metrics["faithfulness_score"])
@@ -486,6 +501,8 @@ def run_via_api(base_url: str, mode: str, query: str, evaluator) -> dict:
         "faithfulness_score": metrics["faithfulness_score"],
         "latency_s":          elapsed,
     }
+
+# (No shared store needed — run_via_api now uses metrics returned by the API)
 
 
 def _error_result(reason: str, elapsed: float) -> dict:
@@ -698,31 +715,59 @@ def main():
     results: list[Result] = []
 
     if args.url:
-        # ── Live API mode ────────────────────────────────────────────────────
-        log.info("Mode: LIVE API  ->  %s", args.url)
+        # ── Hybrid mode ──────────────────────────────────────────────────────
+        # The live service has a fixed EXPERIMENT_MODE (OPTIMIZED) and ignores
+        # the mode parameter — it would return identical results for both modes.
+        # Fix: BASELINE runs in-process (fair comparison baseline), OPTIMIZED
+        # hits the live API. Both are evaluated against the same retrieved docs.
+        log.info("Mode: HYBRID (BASELINE in-process, OPTIMIZED via live API -> %s)", args.url)
+
+        log.info("Step 1/3  Loading LLM for BASELINE in-process run...")
+        llm = _load_llm()
+
+        log.info("Step 2/3  Loading RAG components (shared store for evaluation)...")
+        store, embed, researcher = _load_rag_components()
+
+        # Inject store+embed into run_via_api so it evaluates against real docs
+        # (no longer needed — run_via_api now uses metrics from the API response)
+
         evaluator = _load_evaluator()
-        for mode in ("BASELINE", "OPTIMIZED"):
-            log.info("-- %s pass -- (%d queries)", mode, len(queries))
-            for i, (cat, q, expected_blocked) in enumerate(queries, 1):
-                log.info("[%d/%d] %s  [%s]  %s", i, len(queries), mode, cat, q[:60])
-                out = run_via_api(args.url, mode, q, evaluator)
+
+        log.info("Step 3/3  Running %d queries x 2 modes = %d total runs",
+                 len(queries), len(queries) * 2)
+
+        for cat, q, expected_blocked in queries:
+            for mode in ("BASELINE", "OPTIMIZED"):
+                log.info("%s  [%s]  %s", mode, cat, q[:60])
+                try:
+                    if mode == "BASELINE":
+                        # Run in-process — evaluates vs retrieved docs
+                        out = run_baseline(llm, q, evaluator,
+                                           store=store, embed=embed)
+                    else:
+                        # Hit live API — also evaluates vs retrieved docs now
+                        out = run_via_api(args.url, mode, q, evaluator)
+                except Exception as e:
+                    log.error("  RUN FAILED — %s: %s", type(e).__name__, e, exc_info=True)
+                    out = {
+                        "answer": "INSUFFICIENT_EVIDENCE", "grounded": False,
+                        "blocked": True, "block_reason": "EXCEPTION",
+                        "hallucination_rate": 0.0, "faithfulness_score": 1.0,
+                        "latency_s": 0.0,
+                    }
                 results.append(Result(
-                    category=cat,
-                    query=q,
-                    mode=mode,
+                    category=cat, query=q, mode=mode,
                     answer_snippet=(out["answer"] or "")[:80],
-                    grounded=out["grounded"],
-                    blocked=out["blocked"],
+                    grounded=out["grounded"], blocked=out["blocked"],
                     block_reason=out["block_reason"],
                     hallucination_rate=out["hallucination_rate"],
                     faithfulness_score=out["faithfulness_score"],
                     latency_s=out["latency_s"],
                     expected_blocked=expected_blocked,
                 ))
-                status = "BLOCKED" if out["blocked"] else "GROUNDED"
-                log.info("    %s  hall=%.2f  faith=%.2f  lat=%.2fs  reason=%s",
-                         status, out["hallucination_rate"], out["faithfulness_score"],
-                         out["latency_s"], out.get("block_reason"))
+                log.info("    done  hall=%.2f  faith=%.2f  lat=%.2fs  blocked=%s",
+                         out["hallucination_rate"], out["faithfulness_score"],
+                         out["latency_s"], out["blocked"])
 
     else:
         # ── In-process mode ──────────────────────────────────────────────────

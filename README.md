@@ -2,12 +2,33 @@
 
 A production-grade Retrieval-Augmented Generation (RAG) system for grounded financial query answering. Deployed on Kubernetes via Minikube, the service integrates a multi-node LangGraph pipeline, three MCP data sources, FinBERT-based sentiment analysis, and a confidence-gated reflection mechanism.
 
+> **April 1, 2026 evaluation:** 0% hallucination rate on live API, 88% of adversarial queries correctly blocked, 73.5% FinBERT sentiment accuracy on 49 labeled samples.
+>
 > <img width="926" height="469" alt="Screenshot 2026-05-05 at 8 33 07 AM" src="https://github.com/user-attachments/assets/36c67775-c0f8-45ac-b5a5-54d76400fe0b" />
 
 
-## Workflow - [Baseline and Optimized mode]
 
-<img width="652" height="606" alt="Screenshot 2026-05-06 at 8 12 28 AM" src="https://github.com/user-attachments/assets/1e671bce-53a2-4676-9f41-d6d633f73959" />
+
+<img width="852" height="584" alt="image" src="https://github.com/user-attachments/assets/840c2e37-1e09-4d09-9002-ff311c624c6b" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<img width="623" height="588" alt="image" src="https://github.com/user-attachments/assets/c0fab151-dc53-4c6d-9699-5bf4130542a4" />
+
+
+
+
 
 
 
@@ -27,6 +48,7 @@ A production-grade Retrieval-Augmented Generation (RAG) system for grounded fina
 - [Testing](#testing)
 - [Benchmarking](#benchmarking)
 - [Deployment](#deployment)
+- [Known Issues](#known-issues)
 
 ---
 
@@ -173,7 +195,6 @@ python3 -m venv iisc
 
 source iisc/bin/activate
 
-
 minikube delete
 
 minikube start --memory=4096
@@ -182,7 +203,10 @@ pip install -r requirements.txt
 
 chmod +x deploy.sh
 ./deploy.sh
-python benchmark.py
+
+kubectl port-forward service/finance-api-service 8080:80 &
+
+python ./benchmark.py --url http://localhost:8080
 ```
 
 This script:
@@ -481,8 +505,43 @@ minikube stop
 
 ---
 
+## Known Issues
 
+### 1. MSFT revenue temporal mismatch (active vulnerability)
 
+**Symptom:** Querying MSFT revenue for a specific historical year (e.g. FY2023) returns today's OHLCV price data as a grounded answer.
+
+**Root cause:** No date-range metadata filter on ChromaDB retrieval. The ticker guard confirms the document mentions MSFT; the similarity gate accepts it. But the document is today's price data, not historical revenue.
+
+**Fix:** Add a year filter to `retrieve_node`:
+
+```python
+results = chroma_collection.query(
+    query_embeddings=[query_embedding],
+    n_results=5,
+    where={"year": {"$eq": extracted_year}}
+)
+```
+
+### 2. Alpha Vantage silent failure after rate limit
+
+**Symptom:** After 25 API calls/day, `finance-market` returns empty or error responses with no warning to the caller.
+
+**Workaround:** Monitor call count manually. No retry/backoff is implemented.
+
+### 3. Benchmark in-process mode bypasses guards
+
+**Symptom:** Running `benchmark.py` without `--url` shows 0 blocked queries across all categories.
+
+**Fix:** Always use `python benchmark.py --url http://localhost:8080`.
+
+### 4. FinBERT misclassifies implicit positives and social media text
+
+**Symptom:** 73.47% accuracy on labeled dataset; specific failures on M&A headlines, ironic financial phrasing, and short social posts.
+
+**Workaround:** For inputs < 15 tokens, consider supplementing with VADER compound score as a tiebreaker.
+
+---
 
 ## Technology Stack
 
