@@ -204,7 +204,7 @@ pip install -r requirements.txt
 
 chmod +x deploy.sh
 ./deploy.sh
-python fs_benchmark.py
+python benchmark.py
 ```
 
 This script:
