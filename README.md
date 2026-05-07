@@ -412,7 +412,8 @@ kubectl rollout restart deployment/finance-api
 
 ```bash
 # Start the API first
-kubectl port-forward service/finance-api-service 8080:8000 &
+
+kubectl port-forward service/finance-api-service 8080:80 &
 
 ```
 
@@ -429,17 +430,6 @@ python benchmark.py
 ```
 
 > **Important:** Always use `--url` when benchmarking guard behaviour. The in-process runner bypasses `intent_node`, `fetch_node`, and other API guards entirely.
-
-**April 1, 2026 benchmark summary (in-process, MPS device):**
-
-| Metric | Baseline | Optimized | Winner |
-|---|---|---|---|
-| Hallucination rate (avg) | 13.1% | 33.0% | Baseline\* |
-| Faithfulness score (avg) | 86.9% | 67.0% | Baseline\* |
-| Grounded responses | 0% | 100% | Optimized |
-| Avg latency (s) | 178.9 | 159.4 | Optimized |
-
-\* *The baseline "winning" on hallucination/faithfulness is a measurement artefact — the evaluator measures self-overlap of generic LLM text. The only meaningful metric is Grounded Responses: OPTIMIZED 100%, BASELINE 0%.*
 
 ---
 
