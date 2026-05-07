@@ -1,4 +1,4 @@
-# Finance Intelligence Service
+# A Hallucination-Resistant Retrieval-Augmented Generation System for Grounded Financial Query Answering
 
 A production-grade Retrieval-Augmented Generation (RAG) system for grounded financial query answering. Deployed on Kubernetes via Minikube, the service integrates a multi-node LangGraph pipeline, three MCP data sources, FinBERT-based sentiment analysis, and a confidence-gated reflection mechanism.
 
